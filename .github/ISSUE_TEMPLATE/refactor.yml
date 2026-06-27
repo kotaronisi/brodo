@@ -1,0 +1,50 @@
+name: Refactor
+description: Propose a behavior-preserving code improvement
+title: "refactor: "
+labels:
+  - "type: refactor"
+  - "status: triage"
+  - "priority: medium"
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What should be refactored?
+    validations:
+      required: true
+  - type: textarea
+    id: purpose
+    attributes:
+      label: Purpose
+      description: Why is this refactor needed?
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Behavior Preservation
+      description: What behavior must remain unchanged?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      placeholder: |
+        - [ ] ...
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of Scope
+      description: Optional, but recommended for refactor issues.
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional Context
+    validations:
+      required: false
