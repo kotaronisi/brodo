@@ -1,0 +1,18 @@
+[
+  { "name": "type: bug", "color": "d73a4a", "description": "Bug report or defect" },
+  { "name": "type: feature", "color": "a2eeef", "description": "New feature or enhancement" },
+  { "name": "type: task", "color": "cfd3d7", "description": "Implementation task or maintenance work" },
+  { "name": "type: refactor", "color": "d4c5f9", "description": "Code change that preserves behavior" },
+  { "name": "type: docs", "color": "0075ca", "description": "Documentation change" },
+
+  { "name": "status: triage", "color": "ededed", "description": "Needs prioritization and readiness decision" },
+  { "name": "status: ready", "color": "0e8a16", "description": "Ready for implementation" },
+  { "name": "status: in-progress", "color": "fbca04", "description": "Implementation is in progress" },
+  { "name": "status: blocked", "color": "b60205", "description": "Blocked by dependency, missing information, or decision" },
+  { "name": "status: review", "color": "5319e7", "description": "Pull request is under review" },
+  { "name": "status: done", "color": "0e8a16", "description": "Completed and merged" },
+
+  { "name": "priority: low", "color": "c2e0c6", "description": "Low priority" },
+  { "name": "priority: medium", "color": "fbca04", "description": "Medium priority" },
+  { "name": "priority: high", "color": "d93f0b", "description": "High priority" }
+]

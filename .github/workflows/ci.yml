@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  placeholder:
+    name: Placeholder CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Explain placeholder
+        run: |
+          echo "CI is a placeholder."
+          echo "Configure project-specific test, lint, and build commands when the project stack is decided."
