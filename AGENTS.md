@@ -62,3 +62,11 @@ For multi-step tasks, state a brief plan:
     3. [Step] → verify: [check]
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+## 5. Documentation Language
+
+Choose the document language by its primary audience.
+
+* Documents written for coding agents and automation must be in English.
+* Documents that humans are also expected to read must be in Japanese.
+* If a document has both automation-facing and human-facing content, split it into separate files instead of mixing languages.

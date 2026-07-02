@@ -1,0 +1,104 @@
+schema_version: 1
+
+project:
+  name: brodo
+  type: 3d_game_engine
+
+audience:
+  primary: agent_automation
+  human_readable_notes: docs/human-agent/development-environment.md
+
+environment:
+  primary_os:
+    name: windows
+    status: decided
+  supported_os:
+    - windows
+  future_os:
+    - linux
+
+toolchain:
+  language:
+    name: cpp
+    status: proposed
+  cpp_standard:
+    value: c++20
+    status: proposed
+  build_system:
+    name: cmake
+    status: proposed
+  windows_compiler:
+    name: msvc
+    status: proposed
+  package_manager:
+    name: vcpkg
+    status: proposed
+
+platform:
+  windowing:
+    api: win32
+    abstraction: direct_implementation
+    status: decided
+
+graphics:
+  primary_api:
+    name: directx12
+    status: decided
+  debugging_and_profiling:
+    gpu:
+      status: decided
+      tools:
+        - pix_on_windows
+        - nvidia_nsight_graphics
+
+assets:
+  model_format:
+    name: gltf_2_0
+    status: proposed
+  texture_formats:
+    status: proposed
+    formats:
+      - png
+      - jpg
+      - ktx2
+
+quality:
+  formatter:
+    name: clang-format
+    status: proposed
+  static_analysis:
+    name: clang-tidy
+    status: proposed
+  test_framework:
+    status: decision_required
+    decision_document: docs/decisions/test-framework.md
+
+ci:
+  status: decision_required
+  decision_document: docs/decisions/ci.md
+
+agent_commands:
+  configure:
+    status: pending
+    command: null
+  build:
+    status: pending
+    command: null
+  test:
+    status: pending
+    command: null
+  format:
+    status: pending
+    command: null
+  lint:
+    status: pending
+    command: null
+  run_sample:
+    status: pending
+    command: null
+
+decision_status_values:
+  - decided
+  - proposed
+  - decision_required
+  - pending
