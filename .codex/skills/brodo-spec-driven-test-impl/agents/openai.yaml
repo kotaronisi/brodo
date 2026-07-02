@@ -1,0 +1,4 @@
+interface:
+  display_name: "Brodo Spec-Driven Test Impl"
+  short_description: "Add Brodo GoogleTest coverage from specs"
+  default_prompt: "Use $brodo-spec-driven-test-impl to add GoogleTest coverage from a referenced Brodo specification."
