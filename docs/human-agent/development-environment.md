@@ -15,10 +15,9 @@ docs/development-environment.yaml
 - DirectX 12 を primary graphics API とする。
 - windowing と platform integration は Win32 を直接実装する。
 - GPU の debugging と profiling には PIX on Windows と NVIDIA Nsight Graphics を使う。
-- test framework の選定はまだ未決定。
+- test framework には GoogleTest を使う。
 - CI の選定はまだ未決定。
 
 ## 未決定事項のドキュメント
 
-- `docs/decisions/test-framework.md`
 - `docs/decisions/ci.md`

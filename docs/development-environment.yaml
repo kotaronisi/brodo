@@ -70,8 +70,8 @@ quality:
     name: clang-tidy
     status: proposed
   test_framework:
-    status: decision_required
-    decision_document: docs/decisions/test-framework.md
+    name: gtest
+    status: decided
 
 ci:
   status: decision_required
