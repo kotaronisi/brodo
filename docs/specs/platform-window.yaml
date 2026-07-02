@@ -1,0 +1,87 @@
+schema_version: 1
+
+module:
+  name: platform_window
+  namespace: brodo::platform
+  target: brodo_platform
+  status: decided
+
+platform:
+  supported_os:
+    - windows
+  windowing_api: win32
+  unsupported_os_behavior: fail_configuration_or_compilation
+  future_os:
+    - linux
+
+scope:
+  includes:
+    - create_and_show_an_empty_window
+    - poll_win32_messages
+    - expose_close_request_state
+    - expose_hwnd_for_future_directx12_integration
+  excludes:
+    - rendering
+    - directx12_swap_chain_creation
+    - detailed_input_handling
+    - dpi_awareness_configuration
+
+public_api:
+  header: include/brodo/platform/window.h
+  config:
+    type: WindowConfig
+    fields:
+      title:
+        type: std::wstring
+        default: L"Brodo"
+        encoding: utf_16
+      width:
+        type: int
+        default: 1280
+        validation: must_be_positive
+      height:
+        type: int
+        default: 720
+        validation: must_be_positive
+  window:
+    type: Window
+    ownership: owns_one_hwnd
+    copy: disabled
+    move: enabled
+    errors: std::runtime_error
+    methods:
+      - name: pollEvents
+        behavior: process_pending_win32_messages_without_taking_over_the_application_loop
+      - name: shouldClose
+        behavior: return_true_after_the_user_requests_window_close
+      - name: nativeHandle
+        behavior: return_the_owned_hwnd
+
+behavior:
+  creation:
+    default_title: Brodo
+    default_size: 1280x720
+    resizable: true
+    subsystem_for_sample: console_main
+  close:
+    wm_close: set_should_close_true
+    destruction: release_hwnd_in_destructor
+  validation:
+    non_positive_width: throw_std_runtime_error
+    non_positive_height: throw_std_runtime_error
+
+build:
+  language: cpp
+  cpp_standard: c++20
+  build_system: cmake
+  compiler: msvc
+  package_manager: vcpkg
+  sample_target: brodo_window_sample
+  test_framework: gtest
+  test_target: brodo_platform_tests
+
+acceptance:
+  - cmake_configure_succeeds_with_windows_msvc_and_vcpkg
+  - brodo_platform_builds
+  - brodo_platform_tests_pass
+  - brodo_window_sample_displays_an_empty_window_until_closed

@@ -427,3 +427,9 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Local tool installations and generated dependency artifacts
+tools/vcpkg/
+vcpkg_installed/
+build/
+build-tests/
