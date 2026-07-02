@@ -20,19 +20,20 @@ environment:
 toolchain:
   language:
     name: cpp
-    status: proposed
+    status: decided
   cpp_standard:
     value: c++20
-    status: proposed
+    status: decided
   build_system:
     name: cmake
-    status: proposed
+    status: decided
   windows_compiler:
     name: msvc
-    status: proposed
+    status: decided
   package_manager:
     name: vcpkg
-    status: proposed
+    status: decided
+    local_path: tools/vcpkg
 
 platform:
   windowing:
@@ -78,15 +79,18 @@ ci:
   decision_document: docs/decisions/ci.md
 
 agent_commands:
+  setup_dependencies:
+    status: decided
+    command: .\scripts\setup-vcpkg.ps1
   configure:
-    status: pending
-    command: null
+    status: decided
+    command: cmake -S . -B build "-DCMAKE_TOOLCHAIN_FILE=tools/vcpkg/scripts/buildsystems/vcpkg.cmake"
   build:
-    status: pending
-    command: null
+    status: decided
+    command: cmake --build build
   test:
-    status: pending
-    command: null
+    status: decided
+    command: ctest --test-dir build
   format:
     status: pending
     command: null
@@ -94,8 +98,8 @@ agent_commands:
     status: pending
     command: null
   run_sample:
-    status: pending
-    command: null
+    status: decided
+    command: .\build\Debug\brodo_window_sample.exe
 
 decision_status_values:
   - decided
