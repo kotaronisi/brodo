@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="brodo.vcxproj" Id="e75ee566-ddf7-49f5-8e88-69e45c594d6a" />
+</Solution>
