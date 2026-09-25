@@ -1,24 +1,12 @@
 #include <Windows.h>
 
-const wchar_t g_szClassName[] = L"MyWindowClass";
-const UINT g_clientWidth = 1280;
-const UINT g_clientHeight = 720;
+#include "renderer.h"
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    switch (msg)
-    {
-    case WM_CLOSE:
-        DestroyWindow(hwnd);
-        break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-    default:
-        return DefWindowProc(hwnd, msg, wParam, lParam);
-    }
-    return 0;
-}
+const wchar_t g_szClassName[] = L"MyWindowClass";
+const UINT g_clientWidth = 1920;
+const UINT g_clientHeight = 1080;
+
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR pCmdLine, _In_ int nCmdShow)
 {
@@ -65,6 +53,13 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
+    
+    bool rendererInitialized = InitRenderer(hInstance, hwnd, g_clientWidth, g_clientHeight);
+    if (!rendererInitialized)
+    {
+        MessageBox(NULL, L"Failed to initialize renderer", L"Error", MB_OK | MB_ICONERROR);
+        return 1;
+    }
 
     while (GetMessage(&msg, NULL, 0, 0))
     {
@@ -73,4 +68,20 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
     }
 
     return (int)msg.wParam;
+}
+
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg)
+    {
+    case WM_CLOSE:
+        DestroyWindow(hwnd);
+        break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        break;
+    default:
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+    return 0;
 }
