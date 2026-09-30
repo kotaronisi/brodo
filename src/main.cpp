@@ -12,7 +12,6 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 {
     WNDCLASSEX wc;
     HWND hwnd;
-    MSG msg;
 
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.style = 0;
@@ -60,14 +59,18 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
         MessageBox(NULL, L"Failed to initialize renderer", L"Error", MB_OK | MB_ICONERROR);
         return 1;
     }
-
-    while (GetMessage(&msg, NULL, 0, 0))
+    
+    MSG msg{};
+    while (msg.message != WM_QUIT)
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        while (PeekMessage(&msg, hwnd, 0, 0, PM_REMOVE) > 0)
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
 
-    return (int)msg.wParam;
+    return msg.wParam;
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
