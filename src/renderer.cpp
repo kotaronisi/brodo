@@ -9,6 +9,8 @@ const UINT g_inflightFrameCount = 2;
 ID3D12Device* g_graphicsDevice = nullptr;
 ID3D12CommandQueue* g_commandQueue = nullptr;
 IDXGISwapChain1* g_swapChain = nullptr;
+ID3D12DescriptorHeap* g_backBuffersRTV;
+UINT g_backBuffersRTVIncrementSize;
 ID3D12CommandAllocator* g_commandAllocators[g_inflightFrameCount];
 ID3D12GraphicsCommandList* g_commandLists[g_inflightFrameCount];
 
@@ -87,8 +89,19 @@ bool InitRenderer(HINSTANCE hInstance, HWND hwnd, int width, int height)
         return false;
     }
 
+    D3D12_DESCRIPTOR_HEAP_DESC backBuffersRTVDesc{};
+    backBuffersRTVDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    backBuffersRTVDesc.NumDescriptors = g_inflightFrameCount;
+    hr = g_graphicsDevice->CreateDescriptorHeap(&backBuffersRTVDesc, IID_PPV_ARGS(&g_backBuffersRTV));
+    g_backBuffersRTVIncrementSize = g_graphicsDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
     for (UINT i = 0; i < g_inflightFrameCount; ++i)
     {
+        D3D12_CPU_DESCRIPTOR_HANDLE backBufferDescriptor = g_backBuffersRTV->GetCPUDescriptorHandleForHeapStart();
+        backBufferDescriptor.ptr += i * g_backBuffersRTVIncrementSize;
+        ID3D12Resource* backBuffer = nullptr;  g_swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
+        g_graphicsDevice->CreateRenderTargetView(backBuffer, nullptr, backBufferDescriptor);
+
         g_graphicsDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&g_commandAllocators[i]));
         g_graphicsDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, g_commandAllocators[i], nullptr, IID_PPV_ARGS(&g_commandLists[i]));
     }
