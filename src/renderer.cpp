@@ -9,6 +9,8 @@ const UINT g_inflightFrameCount = 2;
 ID3D12Device* g_graphicsDevice = nullptr;
 ID3D12CommandQueue* g_commandQueue = nullptr;
 IDXGISwapChain1* g_swapChain = nullptr;
+ID3D12CommandAllocator* g_commandAllocators[g_inflightFrameCount];
+ID3D12GraphicsCommandList* g_commandLists[g_inflightFrameCount];
 
 const char* CreateDevice(IDXGIFactory* baseFactory)
 {
@@ -83,6 +85,12 @@ bool InitRenderer(HINSTANCE hInstance, HWND hwnd, int width, int height)
     {
         OutputDebugStringA("Failed to create swap chain");
         return false;
+    }
+
+    for (UINT i = 0; i < g_inflightFrameCount; ++i)
+    {
+        g_graphicsDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&g_commandAllocators[i]));
+        g_graphicsDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, g_commandAllocators[i], nullptr, IID_PPV_ARGS(&g_commandLists[i]));
     }
 
     return true;
