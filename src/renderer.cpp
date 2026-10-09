@@ -17,7 +17,7 @@ D3D12_RECT g_scissorRect;
 ID3D12CommandAllocator* g_commandAllocators[g_inflightFrameCount];
 ID3D12GraphicsCommandList* g_commandLists[g_inflightFrameCount];
 UINT g_frameIndex = UINT_MAX;
-ID3D12Fence* g_fence;
+ID3D12Fence* g_fence[g_inflightFrameCount];
 UINT g_fenceValues[g_inflightFrameCount];
 HANDLE g_fenceEvent;
 
@@ -39,6 +39,14 @@ const char* CreateDevice(IDXGIFactory* baseFactory)
         hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr);
         if (SUCCEEDED(hr)) break;
     }
+
+#ifdef _DEBUG
+    ID3D12Debug* debugController;
+    if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+    {
+        debugController->EnableDebugLayer();
+    }
+#endif
 
     if (adapter == nullptr) return "Failed to find a suitable GPU adapter";
     hr = D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&g_graphicsDevice));
@@ -98,26 +106,33 @@ bool InitRenderer(HINSTANCE hInstance, HWND hwnd, int width, int height)
     IDXGISwapChain3* swapchain3 = nullptr; g_swapChain->QueryInterface(IID_PPV_ARGS(&swapchain3));
     g_frameIndex = swapchain3->GetCurrentBackBufferIndex();
     
-    D3D12_DESCRIPTOR_HEAP_DESC backBuffersRTVDesc{};
-    backBuffersRTVDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    backBuffersRTVDesc.NumDescriptors = g_inflightFrameCount;
-    hr = g_graphicsDevice->CreateDescriptorHeap(&backBuffersRTVDesc, IID_PPV_ARGS(&g_backBuffersRTV));
+    D3D12_DESCRIPTOR_HEAP_DESC backBuffersRTVHeapDesc{};
+    backBuffersRTVHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    backBuffersRTVHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    backBuffersRTVHeapDesc.NumDescriptors = g_inflightFrameCount;
+    hr = g_graphicsDevice->CreateDescriptorHeap(&backBuffersRTVHeapDesc, IID_PPV_ARGS(&g_backBuffersRTV));
     g_backBuffersRTVIncrementSize = g_graphicsDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
+    D3D12_CPU_DESCRIPTOR_HANDLE backBufferDescriptor = g_backBuffersRTV->GetCPUDescriptorHandleForHeapStart();
     for (UINT i = 0; i < g_inflightFrameCount; ++i)
     {
-        D3D12_CPU_DESCRIPTOR_HANDLE backBufferDescriptor = g_backBuffersRTV->GetCPUDescriptorHandleForHeapStart();
-        backBufferDescriptor.ptr += i * g_backBuffersRTVIncrementSize;
         ID3D12Resource* backBuffer = nullptr;  g_swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
         g_graphicsDevice->CreateRenderTargetView(backBuffer, nullptr, backBufferDescriptor);
+        backBufferDescriptor.ptr += g_backBuffersRTVIncrementSize;
 
         g_graphicsDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&g_commandAllocators[i]));
         g_graphicsDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, g_commandAllocators[i], nullptr, IID_PPV_ARGS(&g_commandLists[i]));
+        g_commandLists[i]->Close();
     }
 
+    D3D12_RASTERIZER_DESC rasterDesc{};
+    rasterDesc.FillMode = D3D12_FILL_MODE_SOLID;
+    rasterDesc.CullMode = D3D12_CULL_MODE_NONE;
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
     psoDesc.NumRenderTargets = 1;
     psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    psoDesc.RasterizerState = rasterDesc;
+    psoDesc.SampleMask = UINT_MAX;
 
     g_graphicsDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&g_pso));
 
@@ -130,10 +145,14 @@ bool InitRenderer(HINSTANCE hInstance, HWND hwnd, int width, int height)
 
     g_scissorRect.left = 0;
     g_scissorRect.top = 0;
-    g_scissorRect.right = width;
-    g_scissorRect.bottom = height;
+    g_scissorRect.right = 0;
+    g_scissorRect.bottom = 0;
 
-    g_graphicsDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&g_fence));
+    for (UINT i = 0; i < g_inflightFrameCount; ++i)
+    {
+        g_graphicsDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&g_fence[i]));
+        g_fenceValues[i] = 0;
+    }
     g_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 
     return true;
@@ -141,8 +160,11 @@ bool InitRenderer(HINSTANCE hInstance, HWND hwnd, int width, int height)
 
 void OnRender()
 {
+    g_commandAllocators[g_frameIndex]->Reset();
+
     ID3D12GraphicsCommandList7* commandList = nullptr;
     g_commandLists[g_frameIndex]->QueryInterface(IID_PPV_ARGS(&commandList));
+    commandList->Reset(g_commandAllocators[g_frameIndex], g_pso);
 
     commandList->RSSetViewports(1, &g_viewPort);
     commandList->RSSetScissorRects(1, &g_scissorRect);
@@ -150,7 +172,7 @@ void OnRender()
     ID3D12Resource* backBuffer; g_swapChain->GetBuffer(g_frameIndex, IID_PPV_ARGS(&backBuffer));
 
     D3D12_TEXTURE_BARRIER backBufferBarrierPresentToRTV{};
-    backBufferBarrierPresentToRTV.AccessBefore = D3D12_BARRIER_ACCESS_COMMON;
+    backBufferBarrierPresentToRTV.AccessBefore = D3D12_BARRIER_ACCESS_NO_ACCESS;
     backBufferBarrierPresentToRTV.AccessAfter = D3D12_BARRIER_ACCESS_RENDER_TARGET;
     backBufferBarrierPresentToRTV.LayoutBefore = D3D12_BARRIER_LAYOUT_PRESENT;
     backBufferBarrierPresentToRTV.LayoutAfter = D3D12_BARRIER_LAYOUT_RENDER_TARGET;
@@ -171,7 +193,7 @@ void OnRender()
 
     D3D12_TEXTURE_BARRIER backBufferBarrierRTVToPresent{};
     backBufferBarrierRTVToPresent.AccessBefore = D3D12_BARRIER_ACCESS_RENDER_TARGET;
-    backBufferBarrierRTVToPresent.AccessAfter = D3D12_BARRIER_ACCESS_COMMON;
+    backBufferBarrierRTVToPresent.AccessAfter = D3D12_BARRIER_ACCESS_NO_ACCESS;
     backBufferBarrierRTVToPresent.LayoutBefore = D3D12_BARRIER_LAYOUT_RENDER_TARGET;
     backBufferBarrierRTVToPresent.LayoutAfter = D3D12_BARRIER_LAYOUT_PRESENT;
     backBufferBarrierRTVToPresent.SyncBefore = D3D12_BARRIER_SYNC_RENDER_TARGET;
@@ -187,17 +209,16 @@ void OnRender()
 
     ID3D12CommandList* ppCommandLists[] = { commandList };
     g_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-    g_swapChain->Present(0, 0);
 
     UINT fenceValue = ++g_fenceValues[g_frameIndex];
-    g_commandQueue->Signal(g_fence, fenceValue);
+    g_commandQueue->Signal(g_fence[g_frameIndex], fenceValue);
+
+    g_swapChain->Present(0, 0);
 
     g_frameIndex = (g_frameIndex + 1) % g_inflightFrameCount;
-    if (g_fence->GetCompletedValue() < g_fenceValues[g_frameIndex])
+    if (g_fence[g_frameIndex]->GetCompletedValue() < g_fenceValues[g_frameIndex])
     {
-        g_fence->SetEventOnCompletion(g_fenceValues[g_frameIndex], g_fenceEvent);
+        g_fence[g_frameIndex]->SetEventOnCompletion(g_fenceValues[g_frameIndex], g_fenceEvent);
         WaitForSingleObject(g_fenceEvent, INFINITE);
     }
-
-    g_fenceValues[g_frameIndex] = fenceValue + 1;
 }
