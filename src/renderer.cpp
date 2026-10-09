@@ -180,6 +180,7 @@ void OnRender()
     backBufferBarrierPresentToRTV.SyncAfter = D3D12_BARRIER_SYNC_RENDER_TARGET;
     backBufferBarrierPresentToRTV.pResource = backBuffer;
     D3D12_BARRIER_GROUP swapchainToRtvBarrier{};
+    swapchainToRtvBarrier.Type = D3D12_BARRIER_TYPE_TEXTURE;
     swapchainToRtvBarrier.NumBarriers = 1;
     swapchainToRtvBarrier.pTextureBarriers = &backBufferBarrierPresentToRTV;
 
@@ -200,6 +201,7 @@ void OnRender()
     backBufferBarrierRTVToPresent.SyncAfter = D3D12_BARRIER_SYNC_NONE;
     backBufferBarrierRTVToPresent.pResource = backBuffer;
     D3D12_BARRIER_GROUP swapchainToPresentBarrier{};
+    swapchainToPresentBarrier.Type = D3D12_BARRIER_TYPE_TEXTURE;
     swapchainToPresentBarrier.NumBarriers = 1;
     swapchainToPresentBarrier.pTextureBarriers = &backBufferBarrierRTVToPresent;
 
